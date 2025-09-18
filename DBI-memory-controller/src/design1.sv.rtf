@@ -1,0 +1,70 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 module MemoryInterface (\
+    input  wire [31:0] DQ,       \
+    input  wire DBI,            \
+    input  wire [31:0] prev_DQ,  \
+    input  wire RW,            \
+    output wire [31:0] DQ_out,  \
+    output reg [31:0] RD_out,    \
+    output reg DBI_out,        \
+    output reg [4:0] error_pos   \
+\
+wire [7:0] DQ_out_0, DQ_out_1, DQ_out_2, DQ_out_3;\
+reg [7:0] RD_out_0, RD_out_1, RD_out_2, RD_out_3;\
+reg DBI_out_0, DBI_out_1, DBI_out_2, DBI_out_3;\
+reg [3:0] parity_bits; // Parity bits for error detection\
+\
+assign DQ_out = \{DQ_out_3, DQ_out_2, DQ_out_1, DQ_out_0\}; // Combine 8-bit chunks for write output\
+assign DQ_out_0 = (RW && DBI) ? ~DQ[7:0] : DQ[7:0];\
+assign DQ_out_1 = (RW && DBI) ? ~DQ[15:8] : DQ[15:8];\
+assign DQ_out_2 = (RW && DBI) ? ~DQ[23:16] : DQ[23:16];\
+assign DQ_out_3 = (RW && DBI) ? ~DQ[31:24] : DQ[31:24];\
+\
+always @(*) begin\
+    parity_bits = ^DQ[7:0];\
+    parity_bits = ^DQ[15:8];\
+    parity_bits = ^DQ[23:16];\
+    parity_bits = ^DQ[31:24];\
+end\
+\
+always @(*) begin\
+    if (!RW) begin\
+        int transition_count_0 = 0;\
+        int transition_count_1 = 0;\
+        int transition_count_2 = 0;\
+        int transition_count_3 = 0;\
+\
+        for (int i = 0; i < 8; i++) begin\
+            if (DQ[i] != prev_DQ[i]) transition_count_0++;\
+            if (DQ[i+8] != prev_DQ[i+8]) transition_count_1++;\
+            if (DQ[i+16] != prev_DQ[i+16]) transition_count_2++;\
+            if (DQ[i+24] != prev_DQ[i+24]) transition_count_3++;\
+        end\
+\
+        RD_out_0 = (transition_count_0 > 4 || (transition_count_0 == 4 && DBI)) ? ~DQ[7:0] : DQ[7:0];\
+        RD_out_1 = (transition_count_1 > 4 || (transition_count_1 == 4 && DBI)) ? ~DQ[15:8] : DQ[15:8];\
+        RD_out_2 = (transition_count_2 > 4 || (transition_count_2 == 4 && DBI)) ? ~DQ[23:16] : DQ[23:16];\
+        RD_out_3 = (transition_count_3 > 4 || (transition_count_3 == 4 && DBI)) ? ~DQ[31:24] : DQ[31:24];\
+\
+        DBI_out_0 = (transition_count_0 > 4 || (transition_count_0 == 4 && DBI)) ? 1 : 0;\
+        DBI_out_1 = (transition_count_1 > 4 || (transition_count_1 == 4 && DBI)) ? 1 : 0;\
+        DBI_out_2 = (transition_count_2 > 4 || (transition_count_2 == 4 && DBI)) ? 1 : 0;\
+        DBI_out_3 = (transition_count_3 > 4 || (transition_count_3 == 4 && DBI)) ? 1 : 0;\
+\
+        DBI_out = DBI_out_0 | DBI_out_1 | DBI_out_2 | DBI_out_3; // Combine DBI outputs\
+    end else begin\
+        RD_out_0 = 8'b0; RD_out_1 = 8'b0; RD_out_2 = 8'b0; RD_out_3 = 8'b0; // Default values when not in read mode\
+        DBI_out = 0; // Default value when not in read mode\
+    end\
+end\
+\
+assign RD_out = \{RD_out_3, RD_out_2, RD_out_1, RD_out_0\}; // Combine 8-bit chunks for read output\
+\
+endmodule\
+}

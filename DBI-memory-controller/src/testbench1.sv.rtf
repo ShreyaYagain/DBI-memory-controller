@@ -1,0 +1,93 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 module tb_MemoryInterface;\
+\
+    // Testbench signals\
+    reg [31:0] DQ;\
+    reg DBI;\
+    reg [31:0] prev_DQ;\
+    reg RW;\
+    wire [31:0] DQ_out;\
+    wire [31:0] RD_out;\
+    wire DBI_out;\
+    wire error_detected;\
+    wire [4:0] error_pos;\
+\
+    // Instantiate the MemoryInterface module\
+    MemoryInterface uut (\
+        .DQ(DQ),\
+        .DBI(DBI),\
+        .prev_DQ(prev_DQ),\
+        .RW(RW),\
+        .DQ_out(DQ_out),\
+        .RD_out(RD_out),\
+        .DBI_out(DBI_out),\
+        .error_pos(error_pos)\
+    );\
+\
+    // Testbench procedure\
+    initial begin\
+        // Initialize signals\
+        DQ = 32'b00000000000000000000000000000000;\
+        DBI = 0;\
+        prev_DQ = 32'b00000000000000000000000000000000;\
+        RW = 1; // Write operation\
+\
+        #10 DQ = 32'b11111111111111110000000000000000; prev_DQ = 32'b00000000000000001111111111111111; // High switching power\
+        #10 DQ = 32'b00000000000000001111111111111111; prev_DQ = 32'b11111111111111110000000000000000; // High switching power\
+        #10 DQ = 32'b11111111111111111111111111111111; prev_DQ = 32'b00000000000000000000000000000000; // Maximum switching power\
+        #10 DQ = 32'b00000000000000000000000000000000; prev_DQ = 32'b11111111111111111111111111111111; // Maximum switching power\
+        #10 DQ = 32'b11111111111111110000000000000000; prev_DQ = 32'b11111111111111110000000000000000; // No switching power\
+        #10 DQ = 32'b00000000000000001111111111111111; prev_DQ = 32'b00000000000000001111111111111111; // No switching power\
+        #10 DQ = 32'b10101010101010101010101010101010; prev_DQ = 32'b01010101010101010101010101010101; // High switching power\
+        #10 DQ = 32'b01010101010101010101010101010101; prev_DQ = 32'b10101010101010101010101010101010; // High switching power\
+        #10 DQ = 32'b11110000111100001111000011110000; prev_DQ = 32'b00001111000011110000111100001111; // High switching power\
+        #10 DQ = 32'b00001111000011110000111100001111; prev_DQ = 32'b11110000111100001111000011110000; // High switching power\
+        #10 DQ = 32'b11001100110011001100110011001100; prev_DQ = 32'b00110011001100110011001100110011; // High switching power\
+        #10 DQ = 32'b00110011001100110011001100110011; prev_DQ = 32'b11001100110011001100110011001100; // High switching power\
+        #10 DQ = 32'b11111111000000001111111100000000; prev_DQ = 32'b00000000111111110000000011111111; // High switching power\
+        #10 DQ = 32'b00000000111111110000000011111111; prev_DQ = 32'b11111111000000001111111100000000; // High switching power\
+        #10 DQ = 32'b11111111111111110000000000000000; prev_DQ = 32'b00000000000000001111111111111111; // High switching power\
+        #10 DQ = 32'b00000000000000001111111111111111; prev_DQ = 32'b11111111111111110000000000000000; // High switching power\
+        #10 DQ = 32'b11111111111111111111111111111111; prev_DQ = 32'b00000000000000000000000000000000; // Maximum switching power\
+        #10 DQ = 32'b00000000000000000000000000000000; prev_DQ = 32'b11111111111111111111111111111111; // Maximum switching power\
+\
+        // Apply test vectors with DBI = 1\
+        DBI = 1;\
+        #10 DQ = 32'b11111111111111110000000000000000; prev_DQ = 32'b00000000000000001111111111111111; // High switching power\
+        #10 DQ = 32'b00000000000000001111111111111111; prev_DQ = 32'b11111111111111110000000000000000; // High switching power\
+        #10 DQ = 32'b11111111111111111111111111111111; prev_DQ = 32'b00000000000000000000000000000000; // Maximum switching power\
+        #10 DQ = 32'b00000000000000000000000000000000; prev_DQ = 32'b11111111111111111111111111111111; // Maximum switching power\
+        #10 DQ = 32'b11111111111111110000000000000000; prev_DQ = 32'b11111111111111110000000000000000; // No switching power\
+        #10 DQ = 32'b00000000000000001111111111111111; prev_DQ = 32'b00000000000000001111111111111111; // No switching power\
+        #10 DQ = 32'b10101010101010101010101010101010; prev_DQ = 32'b01010101010101010101010101010101; // High switching power\
+        #10 DQ = 32'b01010101010101010101010101010101; prev_DQ = 32'b10101010101010101010101010101010; // High switching power\
+        #10 DQ = 32'b11110000111100001111000011110000; prev_DQ = 32'b00001111000011110000111100001111; // High switching power\
+        #10 DQ = 32'b00001111000011110000111100001111; prev_DQ = 32'b11110000111100001111000011110000; // High switching power\
+        #10 DQ = 32'b11001100110011001100110011001100; prev_DQ = 32'b00110011001100110011001100110011; // High switching power\
+        #10 DQ = 32'b00110011001100110011001100110011; prev_DQ = 32'b11001100110011001100110011001100; // High switching power\
+        #10 DQ = 32'b11111111000000001111111100000000; prev_DQ = 32'b00000000111111110000000011111111; // High switching power\
+        #10 DQ = 32'b00000000111111110000000011111111; prev_DQ = 32'b11111111000000001111111100000000; // High switching power\
+        #10 DQ = 32'b11111111111111110000000000000000; prev_DQ = 32'b00000000000000001111111111111111; // High switching power\
+        #10 DQ = 32'b00000000000000001111111111111111; prev_DQ = 32'b11111111111111110000000000000000; // High switching power\
+        #10 DQ = 32'b11111111111111111111111111111111; prev_DQ = 32'b00000000000000000000000000000000; // Maximum switching power\
+        #10 DQ = 32'b00000000000000000000000000000000; prev_DQ = 32'b11111111111111111111111111111111; // Maximum switching power\
+\
+        // Finish simulation\
+        #10 $finish;\
+    end\
+\
+    // Monitor signals\
+    initial begin\
+      $dumpfile("dump.vcd");\
+      $dumpvars (1, tb_MemoryInterface);\
+        $monitor("Time=%0t DQ=%b DBI=%b prev_DQ=%b RW=%b DQ_out=%b RD_out=%b DBI_out=%b error_pos=%d", \
+                 $time, DQ, DBI, prev_DQ, RW, DQ_out, RD_out, DBI_out, , error_pos);\
+    end\
+\
+endmodule}
